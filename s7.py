@@ -1,21 +1,19 @@
 # *-*coding:utf-8*-*
 import requests
-str_iata = 'dme'
-#url_checking_iata = 'https://www.s7.ru/app/LocationService?action=get_locations&searchType=avia&str=' + str_iata + '&lang=ru'
-# # json {
-#     stc : 200
-#     std : 'Requests succcees'
-#     c: [{},]
-
-url_checking_iata = 'https://service.s7airlines.com/hermes/location/iata/GOJ;lang=ru'
-# json
-# stc: 200
-# std: Запрос выполнен успешно
+iata_departbonde = 'DME'
+iata_desturn = 'BNE'
 
 
-session = requests.Session()
-response_checking_iata = session.get(url_checking_iata)
-# print response.json()
+def check_iata(iata):
+    url_check_iata = 'https://service.s7airlines.com/hermes/location/iata/' + iata# + ';lang=ru'
+    response_checking_iata = requests.get(url_check_iata)
+    result = response_checking_iata.json()
+    if 'c' in result:
+        return result['c']['code'], result['c']['iataCode']
+
+
+code_depart, iata_depart = check_iata(iata_departbonde)
+code_dest, iata_dest = check_iata(iata_desturn)
 
 # for key, val in response_checking_iata.json().items():
 #     print key, val
@@ -24,10 +22,10 @@ url_start = 'https://travelwith.s7.ru/processFlightsSearch.action'
 data_start = {
     'model.page': 'FLIGHTS_SEARCH_PAGE',
     'model.routeType': 'ONE_WAY',
-    'model.departurePoint': 'AIR_DME_RU',
-    'model.departureIATAPoint': 'dme',
-    'model.arrivalPoint': 'CITY_BNE_QL_AU',
-    'model.arrivalIATAPoint': 'BNE',
+    'model.departurePoint': code_depart,
+    'model.departureIATAPoint': iata_depart,
+    'model.arrivalPoint': code_dest,
+    'model.arrivalIATAPoint': iata_dest,
     'model.departureDate': '08.03.2018',
     'model.arrivalDate': '' ,
     'model.adultsCount': '1',
@@ -52,8 +50,10 @@ headers_start = {
     'Connection': 'keep-alive',
     'Upgrade-Insecure-Requests': '1',
 }
+session = requests.Session()
 response = session.post(url_start, headers=headers_start, data=data_start, verify=False)
 
+print response.headers
 with open('s7.html', 'w') as ouf:
     ouf.write(response.content)
  
