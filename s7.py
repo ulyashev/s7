@@ -1,14 +1,19 @@
 # *-*coding:utf-8*-*
 import requests
 import re
-from collections import namedtuple
+
+
+class DataAirport(object):
+    def __init__(self, iata, code):
+        self.iata = iata
+        self.code = code
 
 
 def get_inner_code(iata):
     if not re.match('^[A-Z]{3}$', iata):
         print 'The entered code is not correct.'
         return
-    url_check_iata = 'https://service.s7airlines.com/hermes/location/iata/' + iata# + ';lang=ru'
+    url_check_iata = 'https://service.s7airlines.com/hermes/location/iata/' + iata
     response_checking_iata = requests.get(url_check_iata)
     result = response_checking_iata.json()
     if 'c' in result:
@@ -66,7 +71,6 @@ def main():
 
     code_depart = get_inner_code(iata_depart)
     code_destin = get_inner_code(iata_destin)
-    DataAirport = namedtuple('DataAirport', ['code', 'iata'])
     port_depart = DataAirport(iata_depart, code_depart)
     port_destin = DataAirport(iata_destin, code_destin)
 
@@ -76,7 +80,6 @@ def main():
         date_depart,
         date_return
     )
-    
     with open('s7.html', 'w') as ouf:
         ouf.write(response_s7_html.content)
 
