@@ -4,8 +4,7 @@ import re
 
 
 def check_iata(iata):
-    print 'Checking iata START'
-    if not re.match('^[A-Z]{3}$'):
+    if not re.match('^[A-Z]{3}$', iata):
         print 'The entered code is not correct.'
         return
     url_check_iata = 'https://service.s7airlines.com/hermes/location/iata/' + iata# + ';lang=ru'
@@ -15,7 +14,14 @@ def check_iata(iata):
         return result['c']['code']
 
 
-def requests_s7(code_depart, iata_depart, code_dest, iata_return):
+def requests_s7(
+    code_depart,
+    iata_depart,
+    code_dest,
+    iata_return,
+    date_depart,
+    date_return,
+    ):
     url_start = 'https://travelwith.s7.ru/processFlightsSearch.action'
     data_start = {
         'model.page': 'FLIGHTS_SEARCH_PAGE',
@@ -57,23 +63,26 @@ def requests_s7(code_depart, iata_depart, code_dest, iata_return):
     )
     return response
 
+def main():
+    iata_depart = 'DME'
+    iata_return = 'LED'
+    date_depart = '30.11.2017'
+    date_return = '26.12.2017'
 
-iata_depart = 'DME'
-iata_return = 'LED'
-date_depart = '30.11.2017'
-date_return = '26.12.2017'
+    code_depart = check_iata(iata_depart)
+    code_dest = check_iata(iata_return)
 
-code_depart = check_iata(iata_depart)
-code_dest = check_iata(iata_return)
-
-response_s7_html = requests_s7(
-    code_depart,
-    iata_depart,
-    code_dest,
-    iata_return
-)
-with open('s7.html', 'w') as ouf:
-    ouf.write(response_s7_html.content)
+    response_s7_html = requests_s7(
+        code_depart,
+        iata_depart,
+        code_dest,
+        iata_return,
+        date_depart,
+        date_return
+    )
+    with open('s7.html', 'w') as ouf:
+        ouf.write(response_s7_html.content)
+main()
 
 # HTTP/1.1 302 Found
 # Server: QRATOR
