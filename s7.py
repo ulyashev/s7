@@ -14,14 +14,7 @@ def check_iata(iata):
         return result['c']['code']
 
 
-def requests_s7(
-    code_depart,
-    iata_depart,
-    code_dest,
-    iata_return,
-    date_depart,
-    date_return,
-    ):
+def requests_s7(code_depart, iata_depart, code_dest, iata_return, date_depart, date_return):
     url_start = 'https://travelwith.s7.ru/processFlightsSearch.action'
     data_start = {
         'model.page': 'FLIGHTS_SEARCH_PAGE',
