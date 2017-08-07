@@ -1,25 +1,29 @@
 # *-*coding:utf-8*-*
 import requests
+import re
 
 
 def check_iata(iata):
     print 'Checking iata START'
+    if not re.match('^[A-Z]{3}$'):
+        print 'The entered code is not correct.'
+        return
     url_check_iata = 'https://service.s7airlines.com/hermes/location/iata/' + iata# + ';lang=ru'
     response_checking_iata = requests.get(url_check_iata)
     result = response_checking_iata.json()
     if 'c' in result:
-        return result['c']['code'], result['c']['iataCode']
+        return result['c']['code']
 
 
-def requests_s7(code_depart, iata_depart, code_dest, iata_dest):
+def requests_s7(code_depart, iata_depart, code_dest, iata_return):
     url_start = 'https://travelwith.s7.ru/processFlightsSearch.action'
     data_start = {
         'model.page': 'FLIGHTS_SEARCH_PAGE',
-        'model.routeType': 'ROUND_TRIP', # ROUND_TRIP, ONE_WAY
+        'model.routeType': 'ROUND_TRIP',  # ROUND_TRIP, ONE_WAY
         'model.departurePoint': code_depart,
         'model.departureIATAPoint': iata_depart,
         'model.arrivalPoint': code_dest,
-        'model.arrivalIATAPoint': iata_dest,
+        'model.arrivalIATAPoint': iata_return,
         'model.departureDate': date_depart,
         'model.arrivalDate': date_return,
         'model.adultsCount': '1',
@@ -45,21 +49,31 @@ def requests_s7(code_depart, iata_depart, code_dest, iata_dest):
         'Upgrade-Insecure-Requests': '1',
     }
     session = requests.Session()
-    response = session.post(url_start, headers=headers_start, data=data_start, verify=False)
+    response = session.post(
+        url_start,
+        headers=headers_start,
+        data=data_start,
+        verify=False
+    )
     return response
 
 
-iata_departure = 'DME'
-iata_destination = 'LED'
+iata_depart = 'DME'
+iata_return = 'LED'
 date_depart = '30.11.2017'
 date_return = '26.12.2017'
 
-code_depart, iata_depart = check_iata(iata_departure)
-code_dest, iata_dest = check_iata(iata_destination)
+code_depart = check_iata(iata_depart)
+code_dest = check_iata(iata_return)
 
-response_s7 = requests_s7(code_depart, iata_depart, code_dest, iata_dest)
+response_s7_html = requests_s7(
+    code_depart,
+    iata_depart,
+    code_dest,
+    iata_return
+)
 with open('s7.html', 'w') as ouf:
-    ouf.write(response_s7.content)
+    ouf.write(response_s7_html.content)
 
 # HTTP/1.1 302 Found
 # Server: QRATOR
