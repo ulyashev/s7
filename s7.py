@@ -3,6 +3,7 @@ import requests
 
 
 def check_iata(iata):
+    print 'Checking iata START'
     url_check_iata = 'https://service.s7airlines.com/hermes/location/iata/' + iata# + ';lang=ru'
     response_checking_iata = requests.get(url_check_iata)
     result = response_checking_iata.json()
@@ -14,13 +15,13 @@ def requests_s7(code_depart, iata_depart, code_dest, iata_dest):
     url_start = 'https://travelwith.s7.ru/processFlightsSearch.action'
     data_start = {
         'model.page': 'FLIGHTS_SEARCH_PAGE',
-        'model.routeType': 'ONE_WAY', # ROUND_TRIP
+        'model.routeType': 'ROUND_TRIP', # ROUND_TRIP, ONE_WAY
         'model.departurePoint': code_depart,
         'model.departureIATAPoint': iata_depart,
         'model.arrivalPoint': code_dest,
         'model.arrivalIATAPoint': iata_dest,
-        'model.departureDate': '08.03.2018',
-        'model.arrivalDate': '',
+        'model.departureDate': date_depart,
+        'model.arrivalDate': date_return,
         'model.adultsCount': '1',
         'model.childrenCount': '0',
         'model.infantsCount': '0',
@@ -48,11 +49,13 @@ def requests_s7(code_depart, iata_depart, code_dest, iata_dest):
     return response
 
 
-iata_departbonde = 'DME'
-iata_desturn = 'LED'
+iata_departure = 'DME'
+iata_destination = 'LED'
+date_depart = '30.11.2017'
+date_return = '26.12.2017'
 
-code_depart, iata_depart = check_iata(iata_departbonde)
-code_dest, iata_dest = check_iata(iata_desturn)
+code_depart, iata_depart = check_iata(iata_departure)
+code_dest, iata_dest = check_iata(iata_destination)
 
 response_s7 = requests_s7(code_depart, iata_depart, code_dest, iata_dest)
 with open('s7.html', 'w') as ouf:
