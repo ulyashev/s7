@@ -1,9 +1,10 @@
 # *-*coding:utf-8*-*
 import requests
 import re
+from collections import namedtuple
 
 
-def check_iata(iata):
+def get_inner_code(iata):
     if not re.match('^[A-Z]{3}$', iata):
         print 'The entered code is not correct.'
         return
@@ -14,15 +15,15 @@ def check_iata(iata):
         return result['c']['code']
 
 
-def requests_s7(code_depart, iata_depart, code_dest, iata_return, date_depart, date_return):
+def requests_s7(port_depart, port_destin, date_depart, date_return):
     url_start = 'https://travelwith.s7.ru/processFlightsSearch.action'
     data_start = {
         'model.page': 'FLIGHTS_SEARCH_PAGE',
         'model.routeType': 'ROUND_TRIP',  # ROUND_TRIP, ONE_WAY
-        'model.departurePoint': code_depart,
-        'model.departureIATAPoint': iata_depart,
-        'model.arrivalPoint': code_dest,
-        'model.arrivalIATAPoint': iata_return,
+        'model.departurePoint': port_depart.code,
+        'model.departureIATAPoint': port_depart.iata,
+        'model.arrivalPoint': port_destin.code,
+        'model.arrivalIATAPoint': port_destin.iata,
         'model.departureDate': date_depart,
         'model.arrivalDate': date_return,
         'model.adultsCount': '1',
@@ -56,25 +57,30 @@ def requests_s7(code_depart, iata_depart, code_dest, iata_return, date_depart, d
     )
     return response
 
+
 def main():
     iata_depart = 'DME'
-    iata_return = 'LED'
+    iata_destin = 'LED'
     date_depart = '30.11.2017'
     date_return = '26.12.2017'
 
-    code_depart = check_iata(iata_depart)
-    code_dest = check_iata(iata_return)
+    code_depart = get_inner_code(iata_depart)
+    code_destin = get_inner_code(iata_destin)
+    DataAirport = namedtuple('DataAirport', ['code', 'iata'])
+    port_depart = DataAirport(iata_depart, code_depart)
+    port_destin = DataAirport(iata_destin, code_destin)
 
     response_s7_html = requests_s7(
-        code_depart,
-        iata_depart,
-        code_dest,
-        iata_return,
+        port_depart,
+        port_destin,
         date_depart,
         date_return
     )
+    
     with open('s7.html', 'w') as ouf:
         ouf.write(response_s7_html.content)
+
+
 main()
 
 # HTTP/1.1 302 Found
