@@ -1,12 +1,13 @@
 # *-*coding:utf-8*-*
 import requests
 import re
+from collections import namedtuple
 
 
-class DataAirport(object):
-    def __init__(self, iata, code):
-        self.iata = iata
-        self.code = code
+class DataAirport(namedtuple('DataAirport', ['iata', 'code'])):
+    def __new__(cls, iata):
+        cls = super(DataAirport, cls).__new__(cls, iata, get_inner_code(iata))
+        return cls
 
 
 def get_inner_code(iata):
@@ -66,14 +67,11 @@ def requests_s7(port_depart, port_destin, date_depart, date_return):
 def main():
     iata_depart = 'DME'
     iata_destin = 'LED'
-    date_depart = '30.11.2017'
+    date_depart = '15.11.2017'
     date_return = '26.12.2017'
 
-    code_depart = get_inner_code(iata_depart)
-    code_destin = get_inner_code(iata_destin)
-    port_depart = DataAirport(iata_depart, code_depart)
-    port_destin = DataAirport(iata_destin, code_destin)
-
+    port_depart = DataAirport(iata_depart)
+    port_destin = DataAirport(iata_destin)
     response_s7_html = requests_s7(
         port_depart,
         port_destin,
