@@ -4,22 +4,6 @@ import re
 from collections import namedtuple
 
 
-class DataAirport(namedtuple('DataAirport', ['iata', 'code'])):
-    def __new__(cls, iata):
-        return super(DataAirport, cls).__new__(cls, iata, get_inner_code(iata))
-
-
-def get_inner_code(iata):
-    if not re.match('^[A-Z]{3}$', iata):
-        print 'The entered code is not correct.'
-        return
-    url_check_iata = 'https://service.s7airlines.com/hermes/location/iata/' + iata
-    response_checking_iata = requests.get(url_check_iata)
-    result = response_checking_iata.json()
-    if 'c' in result:
-        return result['c']['code']
-
-
 def requests_s7(port_depart, port_destin, date_depart, date_return):
     url_start = 'https://travelwith.s7.ru/processFlightsSearch.action'
     data_start = {
@@ -63,6 +47,21 @@ def requests_s7(port_depart, port_destin, date_depart, date_return):
     return response
 
 
+class DataAirport(namedtuple('DataAirport', ['iata', 'code'])):
+    def __new__(cls, iata):
+        return super(DataAirport, cls).__new__(cls, iata, get_inner_code(iata))
+
+
+def get_inner_code(iata):
+    if not re.match('^[A-Z]{3}$', iata):
+        return
+    url_check_iata = 'https://service.s7airlines.com/hermes/location/iata/' + iata
+    response_checking_iata = requests.get(url_check_iata)
+    result = response_checking_iata.json()
+    if 'c' in result:
+        return result['c']['code']
+
+
 def main():
     iata_depart = 'DME'
     iata_destin = 'LED'
@@ -71,6 +70,9 @@ def main():
 
     port_depart = DataAirport(iata_depart)
     port_destin = DataAirport(iata_destin)
+    if not port_depart.code or not port_destin.code:
+        print 'IATA-code is not correct.'
+
     response_s7_html = requests_s7(
         port_depart,
         port_destin,
@@ -82,18 +84,3 @@ def main():
 
 
 main()
-
-# HTTP/1.1 302 Found
-# Server: QRATOR
-# Date: Fri, 04 Aug 2017 08:56:55 GMT
-# Content-Length: 0
-# Connection: keep-alive
-# Keep-Alive: timeout=15
-# Set-Cookie: iberecs="{\"recentSearches\":[{\"type\":\"flightsRecentSearch\",\"rt\":\"ONE_WAY\",\"flexible\":false,\"dp\":\"AIR_GOJ_RU\",\"ap\":\"CITY_BNE_QL_AU\",\"ddasds\":[1520456400000],\"adasd\":null,\"ac\":1,\"cc\":0,\"ic\":0,\"sc\":null,\"rdmptn\":false,\"ct\":\"RUB\",\"s7Only\":false,\"directOnly\":false,\"pc\":\"\",\"dlic\":[\"GOJ\"],\"alic\":[\"BNE\"]},{\"type\":\"flightsRecentSearch\",\"rt\":\"ROUND_TRIP\",\"flexible\":false,\"dp\":\"CITY_MOW_RU\",\"ap\":\"CITY_BNE_QL_AU\",\"ddasds\":[1520456400000],\"adasd\":1520456400000,\"ac\":1,\"cc\":0,\"ic\":0,\"sc\":\"ANY\",\"rdmptn\":false,\"ct\":\"RUB\",\"s7Only\":false,\"directOnly\":false,\"pc\":null,\"dlic\":[\"MOW\"],\"alic\":[\"BNE\"]}]}"; Version=1; Domain=.s7.ru; Max-Age=31536000; Expires=Sat, 04-Aug-2018 08:56:48 GMT; Path=/; Secure
-# Location: http://travelwith.s7.ru/selectExactDateSearchFlights.action?ibe_conversation_flow_type=FLIGHTS&ibe_conversation=4XUU3GLNDYSNQGOVLEUGXZGQXGZCCMNG
-# Content-Language: ru-RU
-# Cache-Control: no-store, no-cache, must-revalidate
-# Strict-Transport-Security: max-age=31536000; includeSubDomains
-
-
-
