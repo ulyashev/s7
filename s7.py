@@ -6,8 +6,7 @@ from collections import namedtuple
 
 class DataAirport(namedtuple('DataAirport', ['iata', 'code'])):
     def __new__(cls, iata):
-        cls = super(DataAirport, cls).__new__(cls, iata, get_inner_code(iata))
-        return cls
+        return super(DataAirport, cls).__new__(cls, iata, get_inner_code(iata))
 
 
 def get_inner_code(iata):
