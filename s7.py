@@ -2,6 +2,7 @@
 import requests
 import re
 from collections import namedtuple
+from datetime import datetime, date, timedelta
 
 
 def requests_s7(port_depart, port_destin, date_depart, date_return):
@@ -62,16 +63,47 @@ def get_inner_code(iata):
         return result['c']['code']
 
 
+def date_validation(date_depart, date_return=None):
+    today = date.today()
+    try:
+        dtime_depart = datetime.strptime(date_depart, '%d.%m.%Y').date()
+        dtime_return = datetime.strptime(date_return, '%d.%m.%Y').date()
+    except ValueError:
+        print 'Error. Date is not correct.(dd.mm.yyyy)'
+        return
+    if dtime_depart < today:
+        print 'Error. Departure date in past.'
+        return
+    if date_return:
+        if dtime_return < today:
+            print 'Error. Return date in past.'
+            return
+    if dtime_return > today + timedelta(365):
+        print 'Error. Change the date of return.'
+        return
+    if dtime_depart > dtime_return:
+        print 'Error. Departure date is longer than the return date.'
+        return
+    return True
+
+
 def main():
     iata_depart = 'DME'
     iata_destin = 'LED'
     date_depart = '15.11.2017'
-    date_return = '26.12.2017'
+    date_return = '10.08.2018'
+    if not date_validation(date_depart, date_return):
+        return
 
     port_depart = DataAirport(iata_depart)
     port_destin = DataAirport(iata_destin)
+
     if not port_depart.code or not port_destin.code:
-        print 'IATA-code is not correct.'
+        print 'Error. IATA-code is not correct.'
+        return
+    if port_depart.code == port_destin.code:
+        print 'Error. IATA-departure is the same as IATA-arrival.'
+        return
 
     response_s7_html = requests_s7(
         port_depart,
@@ -79,6 +111,7 @@ def main():
         date_depart,
         date_return
     )
+    
     with open('s7.html', 'w') as ouf:
         ouf.write(response_s7_html.content)
 
