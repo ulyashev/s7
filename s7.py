@@ -67,22 +67,25 @@ def date_validation(date_depart, date_return=None):
     today = date.today()
     try:
         dtime_depart = datetime.strptime(date_depart, '%d.%m.%Y').date()
-        dtime_return = datetime.strptime(date_return, '%d.%m.%Y').date()
+        if date_return:
+            dtime_return = datetime.strptime(date_return, '%d.%m.%Y').date()
+            if dtime_return < today:
+                print 'Error. Return date in past.'
+                return
+            elif dtime_return > today + timedelta(365):
+                print 'Error. Change the date of return.'
+                return
+            elif dtime_depart > dtime_return:
+                print 'Error. Departure date is longer than the return date.'
+                return
     except ValueError:
         print 'Error. Date is not correct.(dd.mm.yyyy)'
         return
     if dtime_depart < today:
         print 'Error. Departure date in past.'
         return
-    if date_return:
-        if dtime_return < today:
-            print 'Error. Return date in past.'
-            return
-    if dtime_return > today + timedelta(365):
-        print 'Error. Change the date of return.'
-        return
-    if dtime_depart > dtime_return:
-        print 'Error. Departure date is longer than the return date.'
+    elif dtime_depart > today + timedelta(365):
+        print 'Error. Change the date of departure.'
         return
     return True
 
@@ -90,10 +93,11 @@ def date_validation(date_depart, date_return=None):
 def main():
     iata_depart = 'DME'
     iata_destin = 'LED'
-    date_depart = '15.11.2017'
-    date_return = '10.08.2018'
+    date_depart = '11.12.2017'
+    date_return = '9.02.2018'
     if not date_validation(date_depart, date_return):
         return
+    print date_return, date_depart
 
     port_depart = DataAirport(iata_depart)
     port_destin = DataAirport(iata_destin)
@@ -111,7 +115,6 @@ def main():
         date_depart,
         date_return
     )
-    
     with open('s7.html', 'w') as ouf:
         ouf.write(response_s7_html.content)
 
