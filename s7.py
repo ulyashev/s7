@@ -7,9 +7,10 @@ from datetime import datetime, date, timedelta
 
 def requests_s7(port_depart, port_destin, date_depart, date_return):
     url_start = 'https://travelwith.s7.ru/processFlightsSearch.action'
+    route_type = 'ROUND_TRIP' if date_return else 'ONE_WAY'
     data_start = {
         'model.page': 'FLIGHTS_SEARCH_PAGE',
-        'model.routeType': 'ROUND_TRIP',  # ROUND_TRIP, ONE_WAY
+        'model.routeType': route_type,
         'model.departurePoint': port_depart.code,
         'model.departureIATAPoint': port_depart.iata,
         'model.arrivalPoint': port_destin.code,
@@ -67,12 +68,18 @@ def date_validation(date_depart, date_return=None):
     today = date.today()
     try:
         dtime_depart = datetime.strptime(date_depart, '%d.%m.%Y').date()
+        if dtime_depart < today:
+            print 'Error. Departure date in past.'
+            return
+        elif dtime_depart > today + timedelta(360):
+            print 'Error. Change the date of departure.'
+            return
         if date_return:
             dtime_return = datetime.strptime(date_return, '%d.%m.%Y').date()
             if dtime_return < today:
                 print 'Error. Return date in past.'
                 return
-            elif dtime_return > today + timedelta(365):
+            elif dtime_return > today + timedelta(360):
                 print 'Error. Change the date of return.'
                 return
             elif dtime_depart > dtime_return:
@@ -81,11 +88,15 @@ def date_validation(date_depart, date_return=None):
     except ValueError:
         print 'Error. Date is not correct.(dd.mm.yyyy)'
         return
-    if dtime_depart < today:
-        print 'Error. Departure date in past.'
+    return True
+
+
+def check_iata_code(port_depart, port_destin):
+    if not port_depart.code or not port_destin.code:
+        print 'Error. IATA-code is not correct.'
         return
-    elif dtime_depart > today + timedelta(365):
-        print 'Error. Change the date of departure.'
+    if port_depart.code == port_destin.code:
+        print 'Error. IATA-departure is the same as IATA-arrival.'
         return
     return True
 
@@ -97,26 +108,17 @@ def main():
     date_return = '9.02.2018'
     if not date_validation(date_depart, date_return):
         return
-    print date_return, date_depart
-
+    print date_depart, date_return
     port_depart = DataAirport(iata_depart)
     port_destin = DataAirport(iata_destin)
-
-    if not port_depart.code or not port_destin.code:
-        print 'Error. IATA-code is not correct.'
+    if not check_iata_code(port_depart, port_destin):
         return
-    if port_depart.code == port_destin.code:
-        print 'Error. IATA-departure is the same as IATA-arrival.'
-        return
-
-    response_s7_html = requests_s7(
+    response_html = requests_s7(
         port_depart,
         port_destin,
         date_depart,
         date_return
     )
     with open('s7.html', 'w') as ouf:
-        ouf.write(response_s7_html.content)
-
-
+        ouf.write(response_html.content)
 main()
