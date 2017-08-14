@@ -3,6 +3,7 @@ import requests
 import re
 from collections import namedtuple
 from datetime import datetime, date, timedelta
+from lxml import html
 
 
 def requests_s7(port_depart, port_destin, date_depart, date_return):
@@ -101,14 +102,47 @@ def check_iata_code(port_depart, port_destin):
     return True
 
 
+def parser(direction, page):
+    types_tariff = [
+        'basiceconomy',
+        'flexeconomy',
+        'basicbusiness',
+        'flexbusiness'
+    ]
+    result_price = []
+    tree = html.fromstring(page)
+    table = tree.xpath('.//*[@id="{}"]/div[2]/*'.format(direction))
+    for row in table:
+        time_depart = row.xpath(
+            './/*[@data-qa="timeDeparture_flightItem"]/text()')[0]
+        time_arriv = row.xpath(
+            './/*[@data-qa="timeArrived_flightItem"]/text()')[0]
+        duration = row.xpath(
+            './/*[@data-qa="durationTotal_flightItemShort"]/text()')[0]
+        for num, tariff in enumerate(types_tariff):
+            price = row.xpath(
+                './/*[@data-tariff-type="' +
+                tariff +
+                '"]//*[@data-qa="amount"]/text()'
+            )
+            if price:
+                result_price.append([
+                    time_depart,
+                    time_arriv,
+                    duration,
+                    tariff,
+                    price[0]
+                ])
+    return result_price
+
+
 def main():
     iata_depart = 'DME'
     iata_destin = 'LED'
-    date_depart = '11.12.2017'
-    date_return = '9.02.2018'
+    date_depart = '30.11.2017'
+    date_return = '26.12.2017'
     if not date_validation(date_depart, date_return):
         return
-    print date_depart, date_return
     port_depart = DataAirport(iata_depart)
     port_destin = DataAirport(iata_destin)
     if not check_iata_code(port_depart, port_destin):
@@ -119,6 +153,17 @@ def main():
         date_depart,
         date_return
     )
-    with open('s7.html', 'w') as ouf:
-        ouf.write(response_html.content)
+    price_outbound = parser(
+        'exact_outbound_flight_table',
+        response_html.content
+    )
+    price_return = parser(
+        'exact_inbound_flight_table',
+        response_html.content
+    )
+    for elem in price_outbound:
+            print elem
+
+    # with open('s7.html', 'w') as ouf:
+    #     ouf.write(response_html.content)
 main()
