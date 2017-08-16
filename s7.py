@@ -103,30 +103,25 @@ def code_iata_validation(port_depart, port_destin):
 
 
 def parser(direction, page):
-    types_tariff = [
-        'basiceconomy',
-        'flexeconomy',
-        'basicbusiness',
-        'flexbusiness'
-    ]
     result_price = []
     tree = html.fromstring(page)
     table = tree.xpath('.//*[@id="{}"]/div[2]/*'.format(direction))
     for row in table:
         time_depart = row.xpath(
-            './/*[@data-qa="timeDeparture_flightItem"]/text()')[0]
+            './/*[@data-qa="timeDeparture_flightItem"]/text()')
         time_arriv = row.xpath(
-            './/*[@data-qa="timeArrived_flightItem"]/text()')[0]
+            './/*[@data-qa="timeArrived_flightItem"]/text()')
         duration = row.xpath(
-            './/*[@data-qa="durationTotal_flightItemShort"]/text()')[0]
-        for tariff in types_tariff:
-            price = row.xpath(('.//*[@data-tariff-type="{}"]//*[@data-qa="amount"]/text()').format(tariff))
+            './/*[@data-qa="durationTotal_flightItemShort"]/text()')
+        for column in row.xpath('./*[@class="select-item-simple"]/*'):
+            tariff = column.xpath('@data-tariff-type')
+            price = column.xpath('.//*[@data-qa="amount"]/text()')
             if price:
                 result_price.append([
-                    time_depart,
-                    time_arriv,
-                    duration,
-                    tariff,
+                    time_depart[0],
+                    time_arriv[0],
+                    duration[0],
+                    tariff[0],
                     price[0]
                 ])
     return result_price
@@ -148,7 +143,7 @@ def main():
     #iata_depart, iata_destin, date_depart, date_return = check_input_data(sys_arg)
     iata_depart = 'DME'
     iata_destin = 'LED'
-    date_depart = '16.08.2017'
+    date_depart = '9.12.2017'
     date_return = None#'26.12.2017'
     if not date_validation(date_depart, date_return):
         return
@@ -175,7 +170,7 @@ def main():
             print elem
     else:
         print 'Unfortunately, we did not find any suitable flights for you. Try changing the search parameters.'
-    # with open('s7.html', 'w') as ouf:
-    #     ouf.write(response_html.content)
+    with open('s7.html', 'w') as ouf:
+        ouf.write(response_html.content)
 main()
 #main(sys.argv)
