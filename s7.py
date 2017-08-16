@@ -72,7 +72,7 @@ def date_validation(date_depart, date_return=None):
         if dtime_depart < today:
             print 'Error. Departure date in past.'
             return
-        elif dtime_depart > today + timedelta(360):
+        elif dtime_depart > today + timedelta(365):
             print 'Error. Change the date of departure.'
             return
         if date_return:
@@ -80,7 +80,7 @@ def date_validation(date_depart, date_return=None):
             if dtime_return < today:
                 print 'Error. Return date in past.'
                 return
-            elif dtime_return > today + timedelta(360):
+            elif dtime_return > today + timedelta(365):
                 print 'Error. Change the date of return.'
                 return
             elif dtime_depart > dtime_return:
@@ -92,7 +92,7 @@ def date_validation(date_depart, date_return=None):
     return True
 
 
-def check_iata_code(port_depart, port_destin):
+def code_iata_validation(port_depart, port_destin):
     if not port_depart.code or not port_destin.code:
         print 'Error. IATA-code is not correct.'
         return
@@ -119,12 +119,8 @@ def parser(direction, page):
             './/*[@data-qa="timeArrived_flightItem"]/text()')[0]
         duration = row.xpath(
             './/*[@data-qa="durationTotal_flightItemShort"]/text()')[0]
-        for num, tariff in enumerate(types_tariff):
-            price = row.xpath(
-                './/*[@data-tariff-type="' +
-                tariff +
-                '"]//*[@data-qa="amount"]/text()'
-            )
+        for tariff in types_tariff:
+            price = row.xpath(('.//*[@data-tariff-type="{}"]//*[@data-qa="amount"]/text()').format(tariff))
             if price:
                 result_price.append([
                     time_depart,
@@ -136,16 +132,29 @@ def parser(direction, page):
     return result_price
 
 
+def check_input_data(args):
+    """ Осуществляет разбор параметров полученных из sys.argv и их проверку"""
+    if len(args) == 5:
+        return args[1:]
+    elif len(args) == 4:
+        return args[1:] + [None]
+    else:
+        print ('Вы передали {} параметра(ов),'
+               'необходимо 3 или 4.').format(len(args[1:]))
+        return
+
+
 def main():
+    #iata_depart, iata_destin, date_depart, date_return = check_input_data(sys_arg)
     iata_depart = 'DME'
     iata_destin = 'LED'
-    date_depart = '30.11.2017'
-    date_return = '26.12.2017'
+    date_depart = '16.08.2017'
+    date_return = None#'26.12.2017'
     if not date_validation(date_depart, date_return):
         return
     port_depart = DataAirport(iata_depart)
     port_destin = DataAirport(iata_destin)
-    if not check_iata_code(port_depart, port_destin):
+    if not code_iata_validation(port_depart, port_destin):
         return
     response_html = requests_s7(
         port_depart,
@@ -155,15 +164,18 @@ def main():
     )
     price_outbound = parser(
         'exact_outbound_flight_table',
-        response_html.content
+        response_html.text
     )
     price_return = parser(
         'exact_inbound_flight_table',
-        response_html.content
+        response_html.text
     )
-    for elem in price_outbound:
+    if price_outbound:
+        for elem in sorted(price_outbound):
             print elem
-
+    else:
+        print 'Unfortunately, we did not find any suitable flights for you. Try changing the search parameters.'
     # with open('s7.html', 'w') as ouf:
     #     ouf.write(response_html.content)
 main()
+#main(sys.argv)
