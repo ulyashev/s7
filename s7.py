@@ -1,7 +1,9 @@
 # *-*coding:utf-8*-*
+import sys
 import requests
 import re
 from collections import namedtuple
+from itertools import product
 from datetime import datetime, date, timedelta
 from lxml import html
 
@@ -118,11 +120,11 @@ def parser(direction, page):
             price = column.xpath('.//*[@data-qa="amount"]/text()')
             if price:
                 result_price.append([
-                    time_depart[0],
-                    time_arriv[0],
-                    duration[0],
-                    tariff[0],
-                    price[0]
+                    str(time_depart[0]),
+                    str(time_arriv[0]),
+                    'h'.join(duration[0].encode('ascii', 'ignore').split()),
+                    str(tariff[0]),
+                    int(price[0].encode('ascii', 'ignore')),
                 ])
     return result_price
 
@@ -134,16 +136,42 @@ def check_input_data(args):
     elif len(args) == 4:
         return args[1:] + [None]
     else:
-        print ('Вы передали {} параметра(ов),'
-               'необходимо 3 или 4.').format(len(args[1:]))
+        print ('Error. You entered {} parameters, '
+               'you must enter 3 or 4 parameters.').format(len(args[1:]))
         return
 
 
+def information_output(price_outbound, price_return, currency):
+    if price_return:
+        price_result = []
+        for elem_out, elem_ret in product(price_outbound, price_return):
+            price_result.append({
+                'track_out': elem_out,
+                'track_return': elem_ret,
+                'total_sum': elem_out[-1] + elem_ret[-1]
+            })
+        for elem_res in sorted(price_result, key=lambda x: x['total_sum']):
+            print ('Departure-{}, arrival-{}, duration:{}, tariff:{},'
+                   ' price:{} ').format(*elem_res['track_out']) + currency
+            print ('Departure-{}, arrival-{}, duration:{}, tariff:{}, '
+                   'price:{}'.format(*elem_res['track_return']) +
+                   currency)
+            print 'Total:', elem_res['total_sum'], currency, '\n'
+    else:
+        for elem_out in sorted(price_outbound, key=lambda x: x[-1]):
+            print ('Departure-{}, arrival-{}, duration:{}, tariff:{},' +
+                   ' price:{}').format(*elem_out) + currency, '\n'
+
+
 def main():
-    #iata_depart, iata_destin, date_depart, date_return = check_input_data(sys_arg)
+    # import pdb; pdb.set_trace()
+    # input_data = check_input_data(sys_arg)
+    # if not input_data:
+    #     return
+    # iata_depart, iata_destin, date_depart, date_return = input_data
     iata_depart = 'DME'
-    iata_destin = 'LED'
-    date_depart = '9.12.2017'
+    iata_destin = 'GOJ'
+    date_depart = '18.12.2017'
     date_return = None#'26.12.2017'
     if not date_validation(date_depart, date_return):
         return
@@ -165,12 +193,12 @@ def main():
         'exact_inbound_flight_table',
         response_html.text
     )
-    if price_outbound:
-        for elem in sorted(price_outbound):
-            print elem
-    else:
+    if not price_outbound:
         print 'Unfortunately, we did not find any suitable flights for you. Try changing the search parameters.'
-    with open('s7.html', 'w') as ouf:
-        ouf.write(response_html.content)
+    else:
+        page = html.fromstring(response_html.text)
+        currency = page.xpath('.//*[@id="currencyTypeHidden"]/@value')[0]
+        information_output(price_outbound, price_return, currency)
+
 main()
-#main(sys.argv)
+# main(sys.argv)
