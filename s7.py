@@ -163,16 +163,12 @@ def information_output(price_outbound, price_return, currency):
                    ' price:{}').format(*elem_out) + currency, '\n'
 
 
-def main():
+def main(sys_arg):
     # import pdb; pdb.set_trace()
-    # input_data = check_input_data(sys_arg)
-    # if not input_data:
-    #     return
-    # iata_depart, iata_destin, date_depart, date_return = input_data
-    iata_depart = 'DME'
-    iata_destin = 'GOJ'
-    date_depart = '18.12.2017'
-    date_return = None#'26.12.2017'
+    input_data = check_input_data(sys_arg)
+    if not input_data:
+        return
+    iata_depart, iata_destin, date_depart, date_return = input_data
     if not date_validation(date_depart, date_return):
         return
     port_depart = DataAirport(iata_depart)
@@ -200,5 +196,5 @@ def main():
         currency = page.xpath('.//*[@id="currencyTypeHidden"]/@value')[0]
         information_output(price_outbound, price_return, currency)
 
-main()
-# main(sys.argv)
+
+main(sys.argv)
