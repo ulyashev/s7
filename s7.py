@@ -2,7 +2,7 @@
 S7 airline scraper.
 
 The module is designed to provide information on availability and cost
-Tickets on the site xxx. The main function takes an input
+Tickets on the site s7.ru. The main function takes an input
 of four parameters:
   - IATA poisoning (required)
   - IATA-end (required),
