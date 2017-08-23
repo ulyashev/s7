@@ -4,9 +4,9 @@ S7 airline scraper.
 The module is designed to provide information on availability and cost
 Tickets on the site s7.ru. The main function takes an input
 of four parameters:
-  - IATA code (required),
-  - IATA code (required),
-  - Date of departure (required)
+  - IATA code of outbound (required),
+  - IATA code of inbound (required),
+  - Date of departure (required),
   - Date of return (optional).
 
 Produces the search for possible options for flying and displaying
@@ -26,7 +26,6 @@ import requests
 
 def make_request(port_depart, port_destin, date_depart, date_return):
     """Make a request."""
-
     url_start = 'https://travelwith.s7.ru/processFlightsSearch.action'
     route_type = 'ROUND_TRIP' if date_return else 'ONE_WAY'
     data_start = {
