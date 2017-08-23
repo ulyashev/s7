@@ -231,6 +231,7 @@ def information_output(price_depart, price_return, currency):
         for elem_dep in sorted(price_depart, key=lambda x: x[-2]):
             print_price(elem_dep, currency)
             print_flight(elem_dep[-1])
+            print '\n'
 
 
 def main(sys_arg):
