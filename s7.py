@@ -4,14 +4,14 @@ S7 airline scraper.
 The module is designed to provide information on availability and cost
 Tickets on the site s7.ru. The main function takes an input
 of four parameters:
-  - IATA code of outbound (required),
-  - IATA code of inbound (required),
+  - IATA code of origin (required),
+  - IATA code of destination (required),
   - Date of departure (required),
   - Date of return (optional).
 
-Produces the search for possible options for flying and displaying
+Makes a search for available options for flying, and prints the
 information on the screen. Input format: IATA-code, consisting of
-three Latin letters, date in the format (YYYY-MM-DD).
+three uppercase letters, date in the format (DD.MM.YYYY).
 """
 
 from collections import namedtuple
@@ -93,12 +93,12 @@ def get_inner_code(iata):
 
 
 def date_validation(date_depart, date_return=None):
-    """Date validate."""
+    """Validate dates."""
     today = date.today()
     try:
         dtime_depart = datetime.strptime(date_depart, '%d.%m.%Y').date()
         if dtime_depart < today:
-            print 'Error. Departure date in past.'
+            print 'Error. Departure date is in past.'
             return
         elif dtime_depart > today + timedelta(365):
             print 'Error. Change the date of departure.'
@@ -106,22 +106,22 @@ def date_validation(date_depart, date_return=None):
         if date_return:
             dtime_return = datetime.strptime(date_return, '%d.%m.%Y').date()
             if dtime_return < today:
-                print 'Error. Return date in past.'
+                print 'Error. Return date is in past.'
                 return
             elif dtime_return > today + timedelta(365):
                 print 'Error. Change the date of return.'
                 return
             elif dtime_depart > dtime_return:
-                print 'Error. Departure date is longer than the return date.'
+                print 'Error. Departure date is later than the return date.'
                 return
     except ValueError:
-        print 'Error. Date is not correct.(dd.mm.yyyy)'
+        print 'Error. Date format is not correct (dd.mm.yyyy).'
         return
     return True
 
 
 def code_iata_validation(port_depart, port_destin):
-    """Code IATA validate."""
+    """Validate airport codes."""
     if not port_depart.code or not port_destin.code:
         print 'Error. IATA-code is not correct.'
         return
@@ -177,7 +177,6 @@ def parser(direction, page):
 
 
 def check_input_data(args):
-    """Checking input data."""
     if len(args) == 5:
         return args[1:]
     elif len(args) == 4:
@@ -189,7 +188,7 @@ def check_input_data(args):
 
 
 def print_flight(status_flight):
-    """Printing a status flight."""
+    """Print connecting flights for a leg, if any."""
     if not status_flight:
         print 'Direct flight.', '\n'
     else:
@@ -199,17 +198,16 @@ def print_flight(status_flight):
 
 
 def print_price(price, currency):
-    """Printing a price."""
+    """Print quote general info."""
     print ('Departure-{}, arrival-{}, duration:{}, tariff:{},'
            ' price:{} ').format(*price) + currency
 
 
 def information_output(price_depart, price_return, currency):
     """
+    Print flight parameters.
 
-    Print  of flight parameters.
-
-    If there is a return route, consider the total cost of the flight.
+    If there is a return route, compose combined quotes.
     """
 
     if price_return:
